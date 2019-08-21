@@ -95,7 +95,7 @@ class ViewController: NSViewController, URLSessionDelegate, NSTableViewDelegate,
     let groupActionArray = ["Add to Static Group","Remove from Static Group","Replace Existing Static Group"]
 
     // Information used to confirm the header row of the CSV files
-    let userCSV = ["Username","Full Name","Email Address","Phone Number","Position","LDAP Server ID","Site (ID or Name)"]
+    let userCSV = ["Current Username","New Username","Full Name","Email Address","Phone Number","Position","LDAP Server ID","Site (ID or Name)","Managed Apple ID (Requires Jamf Pro 10.15+)"]
     
     let mobileDeviceCSV = ["Mobile Device Serial","Display Name","Asset Tag","Username","Real Name","Email Address","Position","Phone Number","Department","Building","Room","PO Number","Vendor","PO Date","Warranty Expires","Lease Expires","Site (ID or Name)"]
 
@@ -106,7 +106,11 @@ class ViewController: NSViewController, URLSessionDelegate, NSTableViewDelegate,
         globalToken = token
         globalURL = url
         globalBase64 = base64Credentials
-        preferredContentSize = NSSize(width: 550, height: 490)
+        if txtCSV.stringValue == "" {
+            preferredContentSize = NSSize(width: 550, height: 490)
+        } else {
+            preferredContentSize = NSSize(width: 550, height: 550)
+        }
     }
     
     override func viewDidLoad() {
@@ -191,6 +195,8 @@ class ViewController: NSViewController, URLSessionDelegate, NSTableViewDelegate,
                 } else if tabToGoTo == "scope" {
                     self.scopePreFlightChecks()
 
+                } else {
+                    self.initialPreFlightChecks()
                 }
             }
         }
@@ -296,12 +302,14 @@ class ViewController: NSViewController, URLSessionDelegate, NSTableViewDelegate,
     
     @IBAction func submitRequests(_ sender: Any) {
         if ( globalEndpoint.contains("group") || globalEndpoint.contains("prestage") ) {
+            let needNewToken = tokenMan.checkExpiry(expiry: globalExpiry)
             // Check and get a new token if needed, and performing prestage updates
             if globalEndpoint.contains("prestage") {
-                logMan.infoWrite(logString: "Prestage update detected. Checking token expiry.")
-                let needNewToken = tokenMan.checkExpiry(expiry: globalExpiry)
                 if needNewToken {
-                    _ = popMan.generalWarning(question: "Expired Token", text: "It appears that your token has expired. This can happen if the app sits open for too long.\n\nFor now, please quit and re-launch the app to generate a new token.\n\nAutomatic token renewal coming soon.")
+                    _ = popMan.generalWarning(question: "Expired Token", text: "It appears that your token has expired. This can happen if the app sits open for too long.\n\nYou will now be taken back to the login window. Please log in again to generate a new token.")
+                    //lblStatus.stringValue = ""
+                    //tabViewOutlet.selectTabViewItem(at: 0)
+                    performSegue(withIdentifier: "segueLogin", sender: self)
                 }
             }
             let recordTypeOutlet = popRecordTypeOutlet.titleOfSelectedItem!
@@ -343,10 +351,12 @@ class ViewController: NSViewController, URLSessionDelegate, NSTableViewDelegate,
             default:
                 objectType = "computers"
             }
-
-            DispatchQueue.global(qos: .background).async {
-                self.submitScopeUpdates(recordTypeOutlet: recordTypeOutlet, endpoint: endpoint, prestageID: prestageID, httpMethod: httpMethod, objectType: objectType, appendReplaceRemove: appendReplaceRemove)
+            if !needNewToken {
+                DispatchQueue.global(qos: .background).async {
+                    self.submitScopeUpdates(recordTypeOutlet: recordTypeOutlet, endpoint: endpoint, prestageID: prestageID, httpMethod: httpMethod, objectType: objectType, appendReplaceRemove: appendReplaceRemove)
+                }
             }
+
         } else {
             DispatchQueue.global(qos: .background).async {
                 self.submitAttributeUpdates()
@@ -372,7 +382,7 @@ class ViewController: NSViewController, URLSessionDelegate, NSTableViewDelegate,
                 for row in 1...(csvArray.count - 1) {
                     // Get the current row of the CSV for updating
                     let currentRow = csvArray[row]
-                    serialArray.append(currentRow[0])
+                    serialArray.append(currentRow[0].trimmingCharacters(in: CharacterSet.whitespaces))
                 }
                 jsonToSubmit = jsonMan.buildJson(versionLock: versionLock, serialNumbers: serialArray)
                 // Submit the JSON to the Jamf Pro API
@@ -465,11 +475,15 @@ class ViewController: NSViewController, URLSessionDelegate, NSTableViewDelegate,
                 if globalEndpoint! == "users" {
                     // Generate the XML to submit
                     if currentRow[0].isInt {
-                        identifierType = "id"
+                        if mainViewDefaults.value(forKey: "UserInts") != nil {
+                            identifierType = "name"
+                        } else {
+                            identifierType = "id"
+                        }
                     } else {
                         identifierType = "name"
                     }
-                    xmlToPut = xmlMan.userObject(username: currentRow[0], full_name: currentRow[1], email_address: currentRow[2], phone_number: currentRow[3], position: currentRow[4], ldap_server: currentRow[5], ea_ids: ea_ids, ea_values: ea_values, site_ident: "1")
+                    xmlToPut = xmlMan.userObject(username: currentRow[1], full_name: currentRow[2], email_address: currentRow[3], phone_number: currentRow[4], position: currentRow[5], ldap_server: currentRow[6], ea_ids: ea_ids, ea_values: ea_values, site_ident: currentRow[7], managedAppleID: currentRow[8])
                 } else if globalEndpoint! == "computers" {
                     if currentRow[0].isInt {
                         identifierType = "id"
@@ -533,6 +547,7 @@ class ViewController: NSViewController, URLSessionDelegate, NSTableViewDelegate,
                 _ = popMan.generalWarning(question: "Empty CSV Found", text: "It seems the CSV file you uploaded is malformed, or does not contain any data.\n\nPlease try a different CSV.")
             } else if csvArray.count == 1 {
                 // If there is only 1 row in the CSV (header only)
+                drawTables()
                 _ = popMan.generalWarning(question: "No Data Found", text: "It seems the CSV file you uploaded does not contain any data outside of the header row.\n\nPlease select a CSV with updates for MUT to process.")
             } else {
                 // If there is more than 1 column in the CSV
@@ -601,6 +616,24 @@ class ViewController: NSViewController, URLSessionDelegate, NSTableViewDelegate,
         }
     }
     
+    func initialPreFlightChecks() {
+        // If the user has actually selected a CSV template, then move on
+        if txtCSV.stringValue != "" {
+            //get the CSV from the "Browse" button and parse it into an array
+            csvArray = CSVMan.readCSV(pathToCSV: self.globalPathToCSV.path!, delimiter: globalDelimiter!)
+            
+            if csvArray.count == 0 {
+                // If there are no rows in the CSV
+                _ = popMan.generalWarning(question: "Empty CSV Found", text: "It seems the CSV file you uploaded is malformed, or does not contain any data.\n\nPlease try a different CSV.")
+            } else if csvArray.count == 1 {
+                // If there is only 1 row in the CSV (header only)
+                _ = popMan.generalWarning(question: "No Data Found", text: "It seems the CSV file you uploaded does not contain any data outside of the header row.\n\nPlease select a CSV with updates for MUT to process.")
+            }
+        } else {
+            _ = popMan.generalWarning(question: "No CSV Found", text: "Please use the Browse button to find a CSV file on your system with updates that you would like MUT to process.")
+        }
+    }
+    
     func verifyCSV() {
         // Nuke the CSV array on every preflight so we don't get stuck with old data
         csvArray.removeAll()
@@ -614,15 +647,19 @@ class ViewController: NSViewController, URLSessionDelegate, NSTableViewDelegate,
             if globalEndpoint == "Endpoint_Error" {
                 _ = popMan.generalWarning(question: "CSV Error", text: "MUT is not able to read your CSV very well. Please try a different CSV.")
             } else if globalEndpoint == "scope" {
-                tabViewOutlet.selectTabViewItem(at: 2)
-                preferredContentSize = NSSize(width: 550, height: 550)
-                lblStatus.isHidden = false
-                lblStatus.stringValue = "Populate the dropdowns above, and then run your preflight check."
+                if csvArray.count > 1 {
+                    tabViewOutlet.selectTabViewItem(at: 2)
+                    preferredContentSize = NSSize(width: 550, height: 550)
+                    lblStatus.isHidden = false
+                    lblStatus.stringValue = "Populate the dropdowns above, and then run your preflight check."
+                }
             } else {
-                tabViewOutlet.selectTabViewItem(at: 1)
-                preferredContentSize = NSSize(width: 550, height: 550)
-                lblStatus.isHidden = false
-                lblStatus.stringValue = "Review the changes shown above. If everything looks good, hit submit."
+                if csvArray.count > 1 {
+                    tabViewOutlet.selectTabViewItem(at: 1)
+                    preferredContentSize = NSSize(width: 550, height: 550)
+                    lblStatus.isHidden = false
+                    lblStatus.stringValue = "Review the changes shown above. If everything looks good, hit submit."
+                }
             }
             
         } else {
@@ -658,6 +695,7 @@ class ViewController: NSViewController, URLSessionDelegate, NSTableViewDelegate,
 
     func notReadyToRun() {
         btnSubmitOutlet.isHidden = true
+        lblStatus.stringValue = "Populate the dropdowns above, and then run your preflight check."
     }
 
     func guiAttributeRun() {
@@ -765,11 +803,14 @@ extension ViewController: NSTableViewDataSource {
         if (tableColumn?.identifier)!.rawValue == "tableAttribute" {
             cell.textField?.stringValue = attributeRow["tableAttribute"] ?? "NO VALUE"
         } else if (tableColumn?.identifier)!.rawValue == "tableValue" {
+            
+            //If the value is unchanged, set text to systemBlue
+            //IF value is CLEAR!, set text to systemRed
             cell.textField?.stringValue = attributeRow["tableValue"] ?? "NO VALUE"
             if attributeRow["tableValue"] == "(unchanged)" {
                 cell.textField?.textColor = NSColor.systemBlue
             }
-            else if attributeRow["tableValue"] == "CLEAR!" {
+            else if attributeRow["tableValue"] == "WILL BE CLEARED" {
                 cell.textField?.textColor = NSColor.systemRed
                 //cell.textField?.font = NSFont.boldSystemFont(ofSize: 13.0)
             }

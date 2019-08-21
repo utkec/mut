@@ -78,17 +78,16 @@
                                                 <action selector="btnChangeDelim:" target="Ady-hI-5gd" id="Ycv-Ai-bAu"/>
                                             </connections>
                                         </menuItem>
-                                        <menuItem title="Toggle Advanced Debugging" id="Ug6-KN-evu">
-                                            <modifierMask key="keyEquivalentModifierMask"/>
-                                            <connections>
-                                                <action selector="btnEnableDebug:" target="Ady-hI-5gd" id="e4K-JX-eIw"/>
-                                            </connections>
-                                        </menuItem>
-                                        <menuItem isSeparatorItem="YES" id="8lX-Q9-rhv"/>
                                         <menuItem title="Clear Stored Values" id="xsf-6S-z4t">
                                             <modifierMask key="keyEquivalentModifierMask"/>
                                             <connections>
                                                 <action selector="btnClearStored:" target="Ady-hI-5gd" id="fEz-1P-TL9"/>
+                                            </connections>
+                                        </menuItem>
+                                        <menuItem title="My Usernames are Ints" id="qcH-JU-i0E">
+                                            <modifierMask key="keyEquivalentModifierMask"/>
+                                            <connections>
+                                                <action selector="btnUsernameInt:" target="Voe-Tx-rLC" id="D53-SN-Fah"/>
                                             </connections>
                                         </menuItem>
                                     </items>
@@ -127,6 +126,19 @@
                                     </items>
                                 </menu>
                             </menuItem>
+                            <menuItem title="Help!" id="cea-Gi-UUQ">
+                                <modifierMask key="keyEquivalentModifierMask"/>
+                                <menu key="submenu" title="Help!" autoenablesItems="NO" id="jqv-4I-E5Q">
+                                    <items>
+                                        <menuItem title="Open ReadMe" id="yAq-ZS-OyX" userLabel="Open ReadMe">
+                                            <modifierMask key="keyEquivalentModifierMask"/>
+                                            <connections>
+                                                <action selector="btnOpenReadMe:" target="Voe-Tx-rLC" id="K5s-Cm-6Xe"/>
+                                            </connections>
+                                        </menuItem>
+                                    </items>
+                                </menu>
+                            </menuItem>
                         </items>
                     </menu>
                     <connections>
@@ -142,7 +154,7 @@
         <scene sceneID="R2V-B0-nI4">
             <objects>
                 <windowController storyboardIdentifier="MainStoryBoard" id="B8D-0N-5wS" sceneMemberID="viewController">
-                    <window key="window" identifier="MainWindow" title="The MUT v5.0.0" autorecalculatesKeyViewLoop="NO" visibleAtLaunch="NO" animationBehavior="default" id="IQv-IB-iLA">
+                    <window key="window" identifier="MainWindow" title="The MUT v5.1.0" autorecalculatesKeyViewLoop="NO" visibleAtLaunch="NO" animationBehavior="default" id="IQv-IB-iLA">
                         <windowStyleMask key="styleMask" titled="YES" closable="YES" miniaturizable="YES"/>
                         <windowCollectionBehavior key="collectionBehavior" fullScreenNone="YES"/>
                         <rect key="contentRect" x="100" y="100" width="568" height="667"/>
@@ -423,7 +435,7 @@ DQ
                                 <font key="font" metaFont="system"/>
                                 <tabViewItems>
                                     <tabViewItem label="Intro" identifier="intro" id="euP-eV-Ddk" userLabel="Intro">
-                                        <view key="view" id="gbY-L9-mIb">
+                                        <view key="view" ambiguous="YES" id="gbY-L9-mIb">
                                             <rect key="frame" x="0.0" y="0.0" width="510" height="413"/>
                                             <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                             <subviews>
@@ -471,7 +483,7 @@ DQ
                                                     <imageCell key="cell" refusesFirstResponder="YES" alignment="left" imageScaling="proportionallyUpOrDown" image="V5" id="rDQ-C0-hrA"/>
                                                 </imageView>
                                                 <button verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="3H2-fu-eTR">
-                                                    <rect key="frame" x="0.0" y="6" width="510" height="23"/>
+                                                    <rect key="frame" x="1.5" y="6" width="510" height="23"/>
                                                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                                     <buttonCell key="cell" type="roundTextured" title="Download CSV Templates" bezelStyle="texturedRounded" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="tYG-iC-yX4">
                                                         <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
@@ -708,7 +720,7 @@ DQ
                                         </view>
                                     </tabViewItem>
                                     <tabViewItem label="Groups and Prestages" identifier="scope" id="pDl-m0-Z2T">
-                                        <view key="view" ambiguous="YES" id="iuo-Ef-iwI">
+                                        <view key="view" id="iuo-Ef-iwI">
                                             <rect key="frame" x="0.0" y="0.0" width="510" height="413"/>
                                             <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                             <subviews>
@@ -752,7 +764,7 @@ DQ
                                                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                                     <clipView key="contentView" ambiguous="YES" id="e59-8m-TR5">
                                                         <rect key="frame" x="1" y="0.0" width="182" height="409"/>
-                                                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                                                        <autoresizingMask key="autoresizingMask"/>
                                                         <subviews>
                                                             <tableView verticalHuggingPriority="750" allowsExpansionToolTips="YES" columnAutoresizingStyle="lastColumnOnly" selectionHighlightStyle="none" alternatingRowBackgroundColors="YES" columnSelection="YES" multipleSelection="NO" emptySelection="NO" autosaveColumns="NO" rowSizeStyle="automatic" headerView="Emf-2q-3ch" viewBased="YES" id="ZfD-hw-09e">
                                                                 <rect key="frame" x="0.0" y="0.0" width="182" height="384"/>
@@ -889,7 +901,7 @@ DQ
                                 </tabViewItems>
                             </tabView>
                             <button hidden="YES" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="yi8-lJ-HaJ">
-                                <rect key="frame" x="20" y="69" width="510" height="23"/>
+                                <rect key="frame" x="21.5" y="69" width="510" height="23"/>
                                 <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                 <buttonCell key="cell" type="roundTextured" title="Submit Updates" bezelStyle="texturedRounded" alignment="center" borderStyle="border" imageScaling="proportionallyUpOrDown" inset="2" id="I9Y-YU-cLK">
                                     <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
@@ -901,7 +913,7 @@ DQ
                                 </connections>
                             </button>
                             <button hidden="YES" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="m6p-k2-jN9">
-                                <rect key="frame" x="20" y="69" width="510" height="23"/>
+                                <rect key="frame" x="21.5" y="69" width="510" height="23"/>
                                 <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                 <buttonCell key="cell" type="roundTextured" title="Cancel" bezelStyle="texturedRounded" alignment="center" borderStyle="border" imageScaling="proportionallyUpOrDown" inset="2" id="D5L-eG-oNG">
                                     <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
@@ -925,7 +937,7 @@ DQ
                                 </textFieldCell>
                             </textField>
                             <button verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="uAk-K8-6I4">
-                                <rect key="frame" x="352" y="137" width="178" height="23"/>
+                                <rect key="frame" x="353.5" y="137" width="178" height="23"/>
                                 <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                 <buttonCell key="cell" type="roundTextured" title="Browse for Filled Out CSV" bezelStyle="texturedRounded" alignment="center" borderStyle="border" imageScaling="proportionallyUpOrDown" inset="2" id="dgF-V5-PBJ">
                                     <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>

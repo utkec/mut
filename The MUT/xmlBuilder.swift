@@ -13,9 +13,10 @@ public class xmlManager {
     // Globally declaring the xml variable to allow the various functions to populate it
     var xml: XMLDocument?
     let removalValue = "CLEAR!"
+    let xmlDefaults = UserDefaults.standard
 
 
-    public func userObject(username: String, full_name: String, email_address: String, phone_number: String, position: String, ldap_server: String, ea_ids: [String], ea_values: [String], site_ident: String) -> Data {
+    public func userObject(username: String, full_name: String, email_address: String, phone_number: String, position: String, ldap_server: String, ea_ids: [String], ea_values: [String], site_ident: String, managedAppleID: String) -> Data {
 
         // User Object update XML Creation:
 
@@ -71,6 +72,10 @@ public class xmlManager {
         // Position
         let positionElement = XMLElement(name: "position", stringValue: position)
         populateElement(variableToCheck: position, elementName: "position", elementToAdd: positionElement, whereToAdd: root)
+        
+        // Managed Apple ID
+        let managedAppleIDElement = XMLElement(name: "managed_apple_id", stringValue: managedAppleID)
+        populateElement(variableToCheck: managedAppleID, elementName: "managed_apple_id", elementToAdd: managedAppleIDElement, whereToAdd: root)
 
         // LDAP Server
         let ldapServerElement = XMLElement(name: "ldap_server")
@@ -126,6 +131,8 @@ public class xmlManager {
                     extensionAttributesElement.addChild(currentExtensionAttributesElement)
                 }
             }
+            
+            
 
             // Add the EA subset to the root element
             root.addChild(extensionAttributesElement)
@@ -133,7 +140,7 @@ public class xmlManager {
 
 
         // Print the XML
-        //print(xml.debugDescription) // Uncomment for debugging
+        print(xml.debugDescription) // Uncomment for debugging
         return xml.xmlData
     }
 
@@ -185,7 +192,6 @@ public class xmlManager {
         let general = XMLElement(name: "general")
         let location = XMLElement(name: "location")
         let purchasing = XMLElement(name: "purchasing")
-        
         
         
         // ----------------------
@@ -319,16 +325,18 @@ public class xmlManager {
                     extensionAttributesElement.addChild(currentExtensionAttributesElement)
                 }
             }
+            root.addChild(extensionAttributesElement)
         }
 
+        
         root.addChild(general)
         root.addChild(location)
         root.addChild(purchasing)
-        root.addChild(extensionAttributesElement)
+
 
 
         // Print the XML
-        //print(xml.debugDescription) // Uncomment for debugging
+        print(xml.debugDescription) // Uncomment for debugging
         return xml.xmlData
     }
     
@@ -387,6 +395,10 @@ public class xmlManager {
         // ----------------------
         // GENERAL ATTRIBUTES
         // ----------------------
+        
+        // Device Name
+        let deviceNameElement = XMLElement(name: "name", stringValue: displayName)
+        populateElement(variableToCheck: displayName, elementName: "name", elementToAdd: deviceNameElement, whereToAdd: general)
         
         // Asset Tag
         let assetTagElement = XMLElement(name: "asset_tag", stringValue: assetTag)
@@ -505,16 +517,17 @@ public class xmlManager {
                     extensionAttributesElement.addChild(currentExtensionAttributesElement)
                 }
             }
+            root.addChild(extensionAttributesElement)
         }
         
         root.addChild(general)
         root.addChild(location)
         root.addChild(purchasing)
-        root.addChild(extensionAttributesElement)
+
         
         
         // Print the XML
-        //print(xml.debugDescription) // Uncomment for debugging
+        print(xml.debugDescription) // Uncomment for debugging
         return xml.xmlData
     }
 
@@ -605,9 +618,9 @@ public class xmlManager {
                 let computerElement = XMLElement(name: "computer")
                 let identifier = identifiers[i]
                 if identifier.isInt {
-                    computerElement.addChild(XMLElement(name: "id", stringValue: identifier))
+                    computerElement.addChild(XMLElement(name: "id", stringValue: identifier.trimmingCharacters(in: CharacterSet.whitespaces)))
                 } else {
-                    computerElement.addChild(XMLElement(name: "serial_number", stringValue: identifier))
+                    computerElement.addChild(XMLElement(name: "serial_number", stringValue: identifier.trimmingCharacters(in: CharacterSet.whitespaces)))
                 }
                 computersElement.addChild(computerElement)
             }
@@ -638,9 +651,9 @@ public class xmlManager {
                 let deviceElement = XMLElement(name: "mobile_device")
                 let identifier = identifiers[i]
                 if identifier.isInt {
-                    deviceElement.addChild(XMLElement(name: "id", stringValue: identifier))
+                    deviceElement.addChild(XMLElement(name: "id", stringValue: identifier.trimmingCharacters(in: CharacterSet.whitespaces)))
                 } else {
-                    deviceElement.addChild(XMLElement(name: "serial_number", stringValue: identifier))
+                    deviceElement.addChild(XMLElement(name: "serial_number", stringValue: identifier.trimmingCharacters(in: CharacterSet.whitespaces)))
                 }
                 devicesElement.addChild(deviceElement)
             }
@@ -671,9 +684,13 @@ public class xmlManager {
                 let userElement = XMLElement(name: "user")
                 let identifier = identifiers[i]
                 if identifier.isInt {
-                    userElement.addChild(XMLElement(name: "id", stringValue: identifier))
+                    if xmlDefaults.value(forKey: "UserInts") != nil {
+                        userElement.addChild(XMLElement(name: "username", stringValue: identifier.trimmingCharacters(in: CharacterSet.whitespaces)))
+                    } else {
+                        userElement.addChild(XMLElement(name: "id", stringValue: identifier.trimmingCharacters(in: CharacterSet.whitespaces)))
+                    }
                 } else {
-                    userElement.addChild(XMLElement(name: "username", stringValue: identifier))
+                    userElement.addChild(XMLElement(name: "username", stringValue: identifier.trimmingCharacters(in: CharacterSet.whitespaces)))
                 }
                 usersElement.addChild(userElement)
             }
@@ -695,6 +712,7 @@ public class xmlManager {
         } else if variableToCheck != "" {
             whereToAdd.addChild(elementToAdd)
         }
+        
     }
 
 
